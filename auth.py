@@ -18,8 +18,18 @@ def register():
         "password": hash_password(data["password"]),
         "createdAt": datetime.datetime.utcnow()
     }
-    users_collection.insert_one(user)
-    return jsonify({"message": "User registered successfully"}), 201
+    result = users_collection.insert_one(user)
+    user_id = str(result.inserted_id)
+    access_token = create_access_token(identity=user_id)
+    # Return user info (excluding password) and token
+    return jsonify({
+        "token": access_token,
+        "user": {
+            "_id": user_id,
+            "username": user["username"],
+            "email": user["email"]
+        }
+    }), 201
 
 @auth.route("/login", methods=["POST"])
 def login():
